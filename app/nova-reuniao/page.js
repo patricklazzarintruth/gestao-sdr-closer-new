@@ -24,7 +24,6 @@ export default function NovaReuniao() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setMsg("Sessão expirada. Faça login."); window.location.href="/login"; return; }
 
-    // Pega o id do estágio "SQL" (se seed foi rodado)
     const { data: stage } = await supabase
       .from("pipeline_stages")
       .select("id")
@@ -42,13 +41,16 @@ export default function NovaReuniao() {
       stage_id: stage?.id || null
     };
 
-    const { error } = await supabase.from("deals").insert(payload);
+    const { error } = await supabase
+      .from("deals")
+      .insert(payload)
+      .select("id")
+      .single();
+
     if (error) { setMsg(error.message); return; }
 
-    setMsg("Reunião criada!");
-    setForm({ empresa:"", segmento:"", origem:"Inbound", site:"", instagram:"", icp:true });
-    // opcional: redirecionar
-    // window.location.href = "/";
+    // vai direto para a lista
+    window.location.href = "/deals";
   };
 
   return (
@@ -70,6 +72,7 @@ export default function NovaReuniao() {
           ICP (cliente dentro do perfil)
         </label>
         <button type="submit" style={btn}>Salvar</button>
+        <a href="/deals" style={{marginLeft:12}}>Ver reuniões</a>
       </form>
       <p style={{marginTop:12}}>{msg}</p>
     </main>
@@ -78,3 +81,4 @@ export default function NovaReuniao() {
 
 const input = { display:"block", width:"100%", padding:10, margin:"6px 0 12px", border:"1px solid #ddd", borderRadius:8 };
 const btn = { padding:"10px 14px", borderRadius:8, border:"1px solid #111" };
+
